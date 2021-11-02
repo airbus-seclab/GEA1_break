@@ -1,10 +1,10 @@
 # GEA1_break
 
-This tool is an implementation of the attack against the GEA-1 described
-in [Cryptanalysis of the GPRS Encryption Algorithms GEA-1 and GEA-2](https://eprint.iacr.org/2021/819.pdf).
-This algorithm is one of the GPRS native algorithm and does not provide
-the expected level of security, being easily breakable using a single
-computer.
+This tool implements the attack against the GEA-1 described in
+[Cryptanalysis of the GPRS Encryption Algorithms GEA-1 and GEA-2](https://eprint.iacr.org/2021/819.pdf).
+GEA-1 is one of the GPRS native algorithms and does not provide a
+sufficient level of security, being easily breakable using simple COTS
+computer hardware.
 
 ## Table of content
 
@@ -17,7 +17,7 @@ computer.
 
 ## Compiling
 
-First install the `libm4ri` development package on your favorite Linux 
+First, install the `libm4ri` development package on your favorite Linux
 distribution and then type:
 
 ```bash
@@ -66,7 +66,7 @@ $
 
 ## Howto
 
-You can (and you should) test all the internal algorithms using the (default)
+You can (and you should) test all internal algorithms using the (default)
 `-t` command:
 ```
 $ ./gea1_break -t
@@ -74,27 +74,27 @@ $ ./gea1_break -t
         -> OK [0.01s]
 ```
 
-If an `assert()` is triggered then it is probably the sign that you found
-a bug and that you won't be able to run correctly the program (for now).
+If an `assert()` is triggered, it probably implies that you found
+a bug and that you won't be able to correctly run the program (for now).
 
 To recover the secret key used to generate some known keystream, you need
-to generate a set of tables first using `-p`:
+to first generate a set of tables using `-p`:
 ```
 $ ./gea1_break -p --dir mytables
 ```
 
 This precomputes tables within the `./mytables/` directory. This operation
 only needs to be done _once_ and should only take a couple of minutes on
-a _recent_ computer. Please notice that there is a set of tables for each 
-of the two backends. Selecting the backend is done at the compilation time
+_recent_ computer hardware. Please notice that there is a set of tables
+for each of the two backends. Selecting the backend is done at compilation time
 by assigning `OPTIM_LOOKUP` either to `OPTIM_LKUP_CUCKOO` (default) or to
 `OPTIM_LKUP_BSEARCH` (much slower in general).
 
 The second step is to recover the internal state `S` for a given bitstream
-using the `-x` option. `gea1_break` comes in two flavors: the `single` mode
-and the `batch` mode, depending on the compilation flag `OPTIM_BATCH` (0 or 1).
+using the `-x` option. `gea1_break` comes in two flavors: `single` mode
+and `batch` mode, depending on the compilation flag `OPTIM_BATCH` (0 or 1).
 
-In the `single` mode, `gea1_break` is optimized to break a unique key. However
+In `single` mode, `gea1_break` is optimized to break a unique key. However
 it is possible that you may actually need to recover two (or even more)
 keys in which case using the `batch` mode would definitely be better for
 you since the computation is _mutualized_.
@@ -159,8 +159,8 @@ mode.
 
 In [Cryptanalysis of the GPRS Encryption Algorithms GEA-1 and GEA-2](https://eprint.iacr.org/2021/819.pdf),
 the authors recover each secret key using 65 bits of keystream. According 
-to our practical observations though, 64 bits of keystream is enough. As
-a result it is convenient to store the keystream as an `uint64_t` with a
+to our practical observations though, 64 bits of keystream are enough. As
+a result, it is convenient to store the keystream as an `uint64_t` with a
 maximum size of 64 bits (by definition). This is comfortable for a number
 of reasons including saving memory and speeding up computations.
 
@@ -178,13 +178,13 @@ are two exceptions:
 
 ## Performance
 
-It is difficult to measure accurately the performance difference between
-the original paper and this implementation since the hardware is not the
-same at all and some design choices are obviously different. However you
-may be able to roughly estimate the running time on your computer based
-on the tests that we made.
+It is difficult to accurately measure the performance difference
+between the original paper and this implementation, since hardware
+configurations are typically different, and also some design choices are
+obviously different. However, you may be able to roughly estimate the
+running time on your computer based on the tests that we made.
 
-All the following tests were performed on an old DELL server with the
+All the following tests were performed on a DELL server with the
 following characteristics:
 
 * 2x Intel(R) Xeon(R) CPU E5-2640 v2 @ 2.00GHz
@@ -208,18 +208,6 @@ Or generating the `bsearch` tables (not recommended):
 $ make clean && make EXT="-DOPTIM_LOOKUP=OPTIM_LKUP_BSEARCH" -j`nproc`
 $ time ./gea1_break -p --dir ./tables_bsearch
 ```
-
-If compiled with `-DOPTIM_MEM=OPTIM_MEM_HIGH` which is the default option:
-
-| Backend name    | Generation Time  | RAM Required  | Space required (*) |
-| --------------- | ---------------- | ------------- | ------------------ |
-| Cuckoo          | ~5m30            | <20 GB        | 41 GB              |
-| Bsearch         | ~4m40            | <20 GB        | 33 GB              |
-
-
-(*): This requires to remove the `unsorted_` files within the precomputation
-directory.
-
 
 ### Cracking a key (cuckoo/single)
 
@@ -261,10 +249,10 @@ user    23213m50.278s
 sys     286m23.211s
 ```
 
-One can observe that during this run our first round completed within 6h
+One can observe that, during this run, our first round completed within 6h
 when the second one took a 1 hour penalty (while doing the same amount of
 computation) which may be because of other jobs running on the server. 
-With such results we can expect to recover a single key in half that time
+With such results, we can expect to recover a single key in half that time
 on average thus with ~6.5h of computation.
 
 ```
@@ -369,12 +357,12 @@ user 34861m59.565s
 sys  361m49.503s
 ```
 
-One can observe that the state corresponding to the first testvector
+Observe that the state corresponding to the first testvector
 (which is in fact quite _special_) and is not recovered and neither is
 the 4th candidate forcing the program to continue until the very end.
 
-Practically speaking in 956.98m (~16h) we recovered 4 different states thus
-four different keys so the benefit of this mode is obvious. The RAM 
+Practically speaking, in 956.98m (~16h) we recovered 4 different states thus
+four different keys, so the benefit of this mode is obvious. The RAM 
 requirement during this stage is also ~23 GB (`OPTIM_MEM_HIGH`) and ~12 GB
 (`OPTIM_MEM_LOW`).
 
@@ -393,11 +381,11 @@ You may want to play with a couple of flags within `exploit.h`:
 | OPTIM_SCHED            | 1                 | Change the scheduling policy to the most interesting depending on the current task       |
 | OPTIM_SKIP_COLLISIONS  | 1                 | Skip handling collisions within the hash table (some keys may not be broken as a result).|
 
-Generally speaking unless you know what you do, we recommend to keep the
+Generally speaking, unless you know what you do, we recommend to keep the
 default flag values for the best performances.
 
-Note: `OPTIM_SKIP_COLLISIONS` is the default behavior and handling collisions
-thus 100% of the keys is currently not implemented.
+Note: `OPTIM_SKIP_COLLISIONS` is the default behavior, and handling collisions,
+thus 100% of the keys, is currently not implemented.
 
 ## FAQ
 
@@ -425,7 +413,7 @@ None of these options takes time to implement but testing does.
 
 Perhaps! If enough people sign the petition ;>
 
-#### Q: Can you give me a trick to estimate the average/worst running time on my machine?
+#### Q: Can you give me an advice to estimate the average/worst running time on my machine?
 
 Edit `exploit.h` and set `NR_BITS_UB` to `24` then recompile the binary.
 Note the `demo` tag appearing the version:
@@ -471,17 +459,17 @@ user 89m31.224s
 sys  5m24.429s
 ```
 
-So basically, what does that tell us? Loading the memory takes a couple 
+So, basically, what does that tell us? Loading the memory takes a couple 
 of seconds. Since it is only done twice and is independent from the complexity
-of the attack it is negligible.
+of the attack, it is negligible.
 
-On the other hand the keystream generation took respectively 106s and 92s
+On the other hand, the keystream generation took, respectively, 106s and 92s
 to perform each 2^23 (similar) operations.
 
 Therefore:
 * The full run should take less than 15.08h in the worst case. In fact
-since the measure is polluted by the creation/destruction of children
-process, 13.08h is a much better approximation and generally speaking you
+since the measurement is polluted by the creation/destruction of child
+processes, 13.08h is a much better approximation and generally speaking you
 may consider the lowest measure, unless you intend to have your cores
 parasites with other loads.
 * On average a key should break within half that time thus 6.5h.
